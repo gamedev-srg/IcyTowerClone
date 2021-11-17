@@ -1,12 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Mover : MonoBehaviour{
     [SerializeField] float movment_speed = 10f;
     [SerializeField] float jump_velocity = 10f;
     [SerializeField] float midAir_scaler = 0.2f;
     [SerializeField] LayerMask platformLayerMask;
+    [Tooltip("Time to wait before restart on death")]
+    [SerializeField] public int restartWaitTime = 0;
+    [Tooltip("Game horizontal limit, sets the games horizontal border that when reached will kill the player")]
+    [SerializeField] public int horizontalGameBorder = -1;
+    private float zero = 0f;
+    private float one =1f;
     private Rigidbody2D rb2d;
     private BoxCollider2D cc2d;
     private float minSpeedForFriction = 1f;
@@ -16,6 +23,10 @@ public class Mover : MonoBehaviour{
     }
     void Update()
     {
+        if (transform.position.y < horizontalGameBorder)
+        {
+            Kill();
+        }
         if(Input.GetKeyDown(KeyCode.Space) && IsGrounded()){
             rb2d.velocity += new Vector2(rb2d.velocity.x,rb2d.velocity.y +jump_velocity);
         }
@@ -40,10 +51,23 @@ public class Mover : MonoBehaviour{
             }
         }
     }
+
     private bool IsGrounded(){
-        RaycastHit2D ray = Physics2D.BoxCast(cc2d.bounds.center,cc2d.bounds.size,0f,Vector2.down,1f,platformLayerMask);
-        Debug.Log(ray.collider != null);
+        RaycastHit2D ray = Physics2D.BoxCast(cc2d.bounds.center,cc2d.bounds.size,zero,Vector2.down,one,platformLayerMask);
         return ray.collider != null;
+    }
+
+    public void Kill()
+    {
+        Invoke("Restart", restartWaitTime);
+    }
+
+    /*
+     * Restarts the game by restarting the current game scene
+     */
+    void Restart()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
 }
